@@ -41,4 +41,4 @@ def test():
     plt.title('Spatially Binned Features')
     plt.show()
 
-test()
+#test()
