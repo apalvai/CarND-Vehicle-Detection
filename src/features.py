@@ -57,6 +57,32 @@ def extract_all_features(image_paths, cspace='RGB', spatial_size=(32, 32),
     # return all features
     return features
 
+def extract_features_from(path):
+    image_names = glob.glob(path)
+    features = extract_all_features(image_names, cspace='HSV', spatial_size=(32, 32),
+                                    hist_bins=32, hist_range=(0, 256))
+    return features
+
+def vehicle_images_path():
+    return '../vehicles/*/*.png'
+
+def non_vehicle_images_path():
+    return '../non-vehicles/*/*.png'
+
+def extract_vehicle_features():
+    print('extracting vehicle features...')
+    images_path = vehicle_images_path()
+    vehicle_features = extract_features_from(images_path)
+    print('found vehicle features: ', len(vehicle_features))
+    return vehicle_features
+
+def extract_non_vehicle_features():
+    print('extracting non-vehicle features...')
+    images_path = non_vehicle_images_path()
+    non_vehicle_features = extract_features_from(images_path)
+    print('non-vehicle features: ', len(non_vehicle_features))
+    return non_vehicle_features
+
 def normalize_features(feature_list):
     # Create an array stack, NOTE: StandardScaler() expects np.float64
     X = np.vstack(feature_list).astype(np.float64)
@@ -68,34 +94,25 @@ def normalize_features(feature_list):
     return scaled_X, X
 
 def test():
-    vehicle_image_names = glob.glob('../vehicles/KITTI_extracted/*.png')
-#    vehicle_image_names = vehicle_image_names[:1]
-    non_vehicle_image_names = glob.glob('../non-vehicles/GTI/*.png')
-#    non_vehicle_image_names = non_vehicle_image_names[:1]
-
-    print('extracting vehicle features...')
     # extract vehicle and non_vehicle features
-    vehcile_features = extract_all_features(vehicle_image_names, cspace='HSV', spatial_size=(32, 32),
-                                            hist_bins=32, hist_range=(0, 256))
-    print('vehicle features: ', len(vehcile_features))
+    vehicle_features = extract_vehicle_features()
+    non_vehicle_features = extract_non_vehicle_features()
     
-    print('extracting non-vehicle features...')
-    non_vehcile_features = extract_all_features(non_vehicle_image_names, cspace='HSV', spatial_size=(32, 32),
-                                                hist_bins=32, hist_range=(0, 256))
-    print('non-vehicle features: ', len(non_vehcile_features))
-    
-    if len(vehcile_features) > 0:
+    if len(vehicle_features) > 0:
         # Normalize features
         print('normalizing features...')
-        combined_features = [vehcile_features, non_vehcile_features]
-        scaled_X, X = normalize_features((vehcile_features, non_vehcile_features))
+        combined_features = [vehicle_features, non_vehicle_features]
+        scaled_X, X = normalize_features((vehicle_features, non_vehicle_features))
         
-        vehicle_ind = np.random.randint(0, len(vehicle_image_names))
+        images_path = vehicle_images_path()
+        image_names = glob.glob(images_path)
+        
+        vehicle_ind = np.random.randint(0, len(image_names))
         print('vehicle_ind: ', vehicle_ind)
         # Plot an example of raw and scaled features
         fig = plt.figure(figsize=(12,4))
         plt.subplot(131)
-        plt.imshow(mpimg.imread(vehicle_image_names[vehicle_ind]))
+        plt.imshow(mpimg.imread(image_names[vehicle_ind]))
         plt.title('Original Image')
         plt.subplot(132)
         plt.plot(X[vehicle_ind])
