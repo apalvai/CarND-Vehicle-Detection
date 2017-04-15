@@ -84,12 +84,14 @@ def extract_non_vehicle_features():
     return non_vehicle_features
 
 def normalize_features(feature_list):
+    print('normalizing features...')
     # Create an array stack, NOTE: StandardScaler() expects np.float64
     X = np.vstack(feature_list).astype(np.float64)
     # Fit a per-column scaler
     X_scaler = StandardScaler().fit(X)
     # Apply the scaler to X
     scaled_X = X_scaler.transform(X)
+    print('total features count: ', len(scaled_X))
     # return normalized features
     return scaled_X, X
 
