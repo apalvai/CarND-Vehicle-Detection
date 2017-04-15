@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from color_hist import color_hist
 from spatial_bin import bin_spatial
 
-def extract_features(image, cspace='RGB', spatial_size=(32, 32),
+def extract_features_in_image(image, cspace='RGB', spatial_size=(32, 32),
                      hist_bins=32, hist_range=(0, 256)):
     
     color_space_image = None
@@ -40,7 +40,7 @@ def extract_features(image, cspace='RGB', spatial_size=(32, 32),
     feature_list = np.concatenate((col_features, hist_features))
     return feature_list
 
-def extract_all_features(image_paths, cspace='RGB', spatial_size=(32, 32),
+def extract_features(image_paths, cspace='RGB', spatial_size=(32, 32),
                      hist_bins=32, hist_range=(0, 256)):
     # Create a list to append feature vectors to
     features = []
@@ -48,8 +48,8 @@ def extract_all_features(image_paths, cspace='RGB', spatial_size=(32, 32),
         feature_list = []
         # Read in each one by one
         image = mpimg.imread(image_path)
-        feature_list = extract_features(image, cspace=cspace, spatial_size=spatial_size,
-                                        hist_bins=hist_bins, hist_range=hist_range)
+        feature_list = extract_features_in_image(image, cspace=cspace, spatial_size=spatial_size,
+                                                 hist_bins=hist_bins, hist_range=hist_range)
         # print('feature_list: ', feature_list.shape)
         
         # Append the new feature vector to the features list
@@ -59,8 +59,8 @@ def extract_all_features(image_paths, cspace='RGB', spatial_size=(32, 32),
 
 def extract_features_from(path):
     image_names = glob.glob(path)
-    features = extract_all_features(image_names, cspace='HSV', spatial_size=(32, 32),
-                                    hist_bins=32, hist_range=(0, 256))
+    features = extract_features(image_names, cspace='HSV', spatial_size=(32, 32),
+                                hist_bins=32, hist_range=(0, 256))
     return features
 
 def vehicle_images_path():
@@ -123,4 +123,4 @@ def test():
         fig.tight_layout()
         plt.show()
 
-test()
+#test()
