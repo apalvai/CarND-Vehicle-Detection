@@ -6,9 +6,22 @@ from sklearn.model_selection import train_test_split
 from features import extract_vehicle_features, extract_non_vehicle_features, normalize_features
 
 def get_features_and_labels():
+    color_space = 'HLS' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
+    orient = 9  # HOG orientations
+    pix_per_cell = 8 # HOG pixels per cell
+    cell_per_block = 2 # HOG cells per block
+    hog_channel = 'ALL' # Can be 0, 1, 2, or "ALL"
+    spatial_size = (16, 16) # Spatial binning dimensions
+    hist_bins = 16    # Number of histogram bins
+    
     # extract vehicle and non_vehicle features
-    vehicle_features = extract_vehicle_features()
-    non_vehicle_features = extract_non_vehicle_features()
+    vehicle_features = extract_vehicle_features(cspace=color_space, spatial_size=spatial_size,
+                                                hist_bins=hist_bins, hist_range=(0, 256),
+                                                orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, hog_channel=hog_channel)
+                                                
+    non_vehicle_features = extract_non_vehicle_features(cspace=color_space, spatial_size=spatial_size,
+                                                        hist_bins=hist_bins, hist_range=(0, 256),
+                                                        orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, hog_channel=hog_channel)
     
     # Normalize features
     combined_features = [vehicle_features, non_vehicle_features]
@@ -30,6 +43,7 @@ def train_linear_SVC_classifer(svc, X_train, X_test, y_train, y_test):
     
     # Use a linear SVC
     if svc == None:
+        print('creating Linear SVC...')
         svc = LinearSVC()
     
     # Check the training time for the SVC
@@ -55,7 +69,7 @@ def test():
     # Retrieve features and labels
     features, y = get_features_and_labels()
     svc = None
-    for epoch in range (0, 5):
+    for epoch in range (0, 2):
         X_train, X_test, y_train, y_test = get_train_and_test_data(features, y)
         svc = train_linear_SVC_classifer(svc, X_train, X_test, y_train, y_test)
 
