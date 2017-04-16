@@ -36,4 +36,4 @@ def test():
     plt.title('HOG Visualization')
     plt.show()
 
-test()
+#test()

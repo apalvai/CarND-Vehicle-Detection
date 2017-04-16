@@ -7,11 +7,11 @@ from sklearn.preprocessing import StandardScaler
 
 from color_hist import color_hist
 from spatial_bin import bin_spatial
+from hog import get_hog_features
 
 def extract_features_in_image(image, cspace='RGB', spatial_size=(32, 32),
-                     hist_bins=32, hist_range=(0, 256)):
-    
-    color_space_image = None
+                              hist_bins=32, hist_range=(0, 256),
+                              orient=9, pix_per_cell=8, cell_per_block=2, hog_channel=0):
     
     # apply color conversion if other than 'RGB'
     if cspace != 'RGB':
@@ -33,15 +33,33 @@ def extract_features_in_image(image, cspace='RGB', spatial_size=(32, 32),
 
     # Apply color_hist() to get color histogram features
     channel1_hist, channel2_hist, channel3_hist, bin_centers, hist_features = color_hist(color_space_image, nbins=hist_bins, bins_range=hist_range)
+    
+    # Extract HOG features
+    if hog_channel == 'ALL':
+        hog_features = []
+        # get hog features for all channels in the image
+        for channel in range(color_space_image.shape[2]):
+            hog_features_channel, hog_image_channel = get_hog_features(color_space_image[:, :, channel], orient,
+                                                                       pix_per_cell, cell_per_block,
+                                                                       vis=True, feature_vec=False)
+            hog_features.extend(hog_features_channel)
+    else:
+        hog_features, hog_image = get_hog_features(color_space_image[:, :, hog_channel], orient,
+                                                   pix_per_cell, cell_per_block,
+                                                   vis=True, feature_vec=False)
+    # process the hog_features 
+    hog_features = np.ravel(hog_features)
 
     # combine spatial colour and histogram features
     # print('col_features: ', col_features.shape)
     # print('hist_features: ', hist_features.shape)
-    feature_list = np.concatenate((col_features, hist_features))
+    # print('hog_features: ', hog_features.shape)
+    feature_list = np.concatenate((col_features, hist_features, hog_features))
     return feature_list
 
 def extract_features(image_paths, cspace='RGB', spatial_size=(32, 32),
-                     hist_bins=32, hist_range=(0, 256)):
+                     hist_bins=32, hist_range=(0, 256),
+                     orient=9, pix_per_cell=8, cell_per_block=2, hog_channel=0):
     # Create a list to append feature vectors to
     features = []
     for image_path in image_paths:
@@ -49,7 +67,8 @@ def extract_features(image_paths, cspace='RGB', spatial_size=(32, 32),
         # Read in each one by one
         image = mpimg.imread(image_path)
         feature_list = extract_features_in_image(image, cspace=cspace, spatial_size=spatial_size,
-                                                 hist_bins=hist_bins, hist_range=hist_range)
+                                                 hist_bins=hist_bins, hist_range=hist_range,
+                                                 orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, hog_channel=hog_channel)
         # print('feature_list: ', feature_list.shape)
         
         # Append the new feature vector to the features list
@@ -57,10 +76,15 @@ def extract_features(image_paths, cspace='RGB', spatial_size=(32, 32),
     # return all features
     return features
 
-def extract_features_from(path):
+def extract_features_from(path, cspace='HSV', spatial_size=(32, 32),
+                          hist_bins=32, hist_range=(0, 256),
+                          orient=9, pix_per_cell=8, cell_per_block=2, hog_channel=0):
+    
     image_names = glob.glob(path)
-    features = extract_features(image_names, cspace='HSV', spatial_size=(32, 32),
-                                hist_bins=32, hist_range=(0, 256))
+    image_names = image_names[0:1000] # TODO: Remove this limitation
+    features = extract_features(image_names, cspace=cspace, spatial_size=spatial_size,
+                                hist_bins=hist_bins, hist_range=hist_range,
+                                orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, hog_channel=hog_channel)
     return features
 
 def vehicle_images_path():
@@ -69,17 +93,25 @@ def vehicle_images_path():
 def non_vehicle_images_path():
     return '../non-vehicles/*/*.png'
 
-def extract_vehicle_features():
+def extract_vehicle_features(cspace='HSV', spatial_size=(32, 32),
+                             hist_bins=32, hist_range=(0, 256),
+                             orient=9, pix_per_cell=8, cell_per_block=2, hog_channel=0):
     print('extracting vehicle features...')
     images_path = vehicle_images_path()
-    vehicle_features = extract_features_from(images_path)
+    vehicle_features = extract_features_from(images_path, cspace=cspace, spatial_size=spatial_size,
+                                             hist_bins=hist_bins, hist_range=hist_range,
+                                             orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, hog_channel=hog_channel)
     print('found vehicle features: ', len(vehicle_features))
     return vehicle_features
 
-def extract_non_vehicle_features():
+def extract_non_vehicle_features(cspace='HSV', spatial_size=(32, 32),
+                                 hist_bins=32, hist_range=(0, 256),
+                                 orient=9, pix_per_cell=8, cell_per_block=2, hog_channel=0):
     print('extracting non-vehicle features...')
     images_path = non_vehicle_images_path()
-    non_vehicle_features = extract_features_from(images_path)
+    non_vehicle_features = extract_features_from(images_path, cspace=cspace, spatial_size=spatial_size,
+                                                 hist_bins=hist_bins, hist_range=hist_range,
+                                                 orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, hog_channel=hog_channel)
     print('non-vehicle features: ', len(non_vehicle_features))
     return non_vehicle_features
 
@@ -102,7 +134,6 @@ def test():
     
     if len(vehicle_features) > 0:
         # Normalize features
-        print('normalizing features...')
         combined_features = [vehicle_features, non_vehicle_features]
         scaled_X, X = normalize_features((vehicle_features, non_vehicle_features))
         
