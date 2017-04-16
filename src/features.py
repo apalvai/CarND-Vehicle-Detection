@@ -10,10 +10,7 @@ from color_hist import color_hist
 from spatial_bin import bin_spatial
 from hog import get_hog_features
 
-def extract_features_in_image(image, cspace='RGB', spatial_size=(32, 32),
-                              hist_bins=32, hist_range=(0, 256),
-                              orient=9, pix_per_cell=8, cell_per_block=2, hog_channel=0):
-    
+def convert_color(image, cspace='RGB'):
     # apply color conversion if other than 'RGB'
     if cspace != 'RGB':
         if cspace == 'HSV':
@@ -28,7 +25,16 @@ def extract_features_in_image(image, cspace='RGB', spatial_size=(32, 32),
             color_space_image = cv2.cvtColor(image, cv2.COLOR_RGB2YCrCb)
     else:
         color_space_image = np.copy(image)
+    
+    return color_space_image
 
+def extract_features_in_image(image, cspace='RGB', spatial_size=(32, 32),
+                              hist_bins=32, hist_range=(0, 256),
+                              orient=9, pix_per_cell=8, cell_per_block=2, hog_channel=0):
+    
+    # apply color conversion if other than 'RGB'
+    color_space_image = convert_color(image, cspace=cspace)
+    
     # Apply bin_spatial() to get spatial color features
     col_features = bin_spatial(color_space_image, color_space=cspace, size=spatial_size)
 
