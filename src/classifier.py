@@ -10,27 +10,8 @@ from sklearn.svm import LinearSVC
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
 
-from features import extract_vehicle_features, extract_non_vehicle_features, normalize_features, extract_features_in_image
+from features import get_features_and_labels, extract_features_in_image
 from helpers import slide_window, draw_boxes
-
-def get_features_and_labels(color_space, spatial_size, hist_bins, hist_range, orient, pix_per_cell, cell_per_block, hog_channel):
-    # extract vehicle and non_vehicle features
-    vehicle_features = extract_vehicle_features(cspace=color_space, spatial_size=spatial_size,
-                                                hist_bins=hist_bins, hist_range=(0, 256),
-                                                orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, hog_channel=hog_channel)
-                                                
-    non_vehicle_features = extract_non_vehicle_features(cspace=color_space, spatial_size=spatial_size,
-                                                        hist_bins=hist_bins, hist_range=(0, 256),
-                                                        orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, hog_channel=hog_channel)
-    
-    # Normalize features
-    combined_features = [vehicle_features, non_vehicle_features]
-    scaled_X, X, X_scaler = normalize_features((vehicle_features, non_vehicle_features))
-    
-    # Define the labels vector
-    y = np.hstack((np.ones(len(vehicle_features)), np.zeros(len(non_vehicle_features))))
-    
-    return scaled_X, y, X_scaler
 
 def get_train_and_test_data(features, y):
     # Split up data into randomized training and test sets
@@ -44,18 +25,19 @@ def train_linear_SVC_classifer(svc, X_train, X_test, y_train, y_test):
     print('X_test: ', X_test.shape)
     # Use a linear SVC
     if svc == None:
-        print('creating Linear SVC...')
-        svc = LinearSVC()
+        # print('creating Linear SVC...')
+        # svc = LinearSVC()
         
-#        parameters = {'kernel':('linear', 'rbf'), 'C':[0.1, 1, 10], 'gamma':[0.1, 1, 10]}
-#        svr = svm.SVC()
-#        svc = GridSearchCV(svr, parameters)
+        print('creating SVC and searching for best params...')
+        parameters = {'kernel':('linear', 'rbf'), 'C':[0.1, 1, 10], 'gamma':[0.1, 1, 10]}
+        svr = svm.SVC()
+        svc = GridSearchCV(svr, parameters)
 
     # Check the training time for the SVC
-    print('training LinearSVC...')
+    print('training...')
     t=time.time()
     svc.fit(X_train, y_train)
-#    print('best params: ', svc.best_params_)
+    print('best params: ', svc.best_params_)
     t2 = time.time()
     print(round(t2-t, 2), 'Seconds to train SVC...')
 
