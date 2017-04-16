@@ -19,8 +19,8 @@ def get_features_and_labels():
     pix_per_cell = 8 # HOG pixels per cell
     cell_per_block = 2 # HOG cells per block
     hog_channel = 'ALL' # Can be 0, 1, 2, or "ALL"
-    spatial_size = (32, 32) # Spatial binning dimensions
-    hist_bins = 32    # Number of histogram bins
+    spatial_size = (16, 16) # Spatial binning dimensions
+    hist_bins = 16    # Number of histogram bins
     
     # extract vehicle and non_vehicle features
     vehicle_features = extract_vehicle_features(cspace=color_space, spatial_size=spatial_size,
@@ -124,7 +124,9 @@ def test():
     image = image.astype(np.float32)/255
 
     # Size of the test image is (1280, 720)
-    y_start_stop = [340, 660]
+    image_shape = image.shape
+    y_start_stop = [320, image_shape[0]]
+    print('y_start_stop: ', y_start_stop)
     
     # windows to be explored in the image
     windows = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop, xy_window=(64, 64), xy_overlap=(0.5, 0.5))
@@ -132,7 +134,7 @@ def test():
     # determine the windows where a vehicle is detected
     print('searching image for vehicles...')
     hot_windows = search_windows(image, windows, svc, X_scaler,
-                                 color_space='HLS', spatial_size=(32, 32), hist_bins=32, hist_range=(0, 256),
+                                 color_space='HLS', spatial_size=(16, 16), hist_bins=16, hist_range=(0, 256),
                                  orient=11, pix_per_cell=8, cell_per_block=2, hog_channel='ALL')
     print ('hot_windows count: ', len(hot_windows))
 
