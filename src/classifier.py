@@ -15,10 +15,10 @@ from helpers import slide_window, draw_boxes
 
 def get_features_and_labels():
     color_space = 'HLS' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
-    orient = 9  # HOG orientations
+    orient = 11  # HOG orientations
     pix_per_cell = 8 # HOG pixels per cell
     cell_per_block = 2 # HOG cells per block
-    hog_channel = 0 # 'ALL' # Can be 0, 1, 2, or "ALL"
+    hog_channel = 'ALL' # Can be 0, 1, 2, or "ALL"
     spatial_size = (32, 32) # Spatial binning dimensions
     hist_bins = 32    # Number of histogram bins
     
@@ -133,7 +133,7 @@ def test():
     print('searching image for vehicles...')
     hot_windows = search_windows(image, windows, svc, X_scaler,
                                  color_space='HLS', spatial_size=(32, 32), hist_bins=32, hist_range=(0, 256),
-                                 orient=9, pix_per_cell=8, cell_per_block=2, hog_channel=0)
+                                 orient=11, pix_per_cell=8, cell_per_block=2, hog_channel='ALL')
     print ('hot_windows count: ', len(hot_windows))
 
     # draw the boxes for detected hot_windows
