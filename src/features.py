@@ -81,7 +81,6 @@ def extract_features_from(path, cspace='HSV', spatial_size=(32, 32),
                           orient=9, pix_per_cell=8, cell_per_block=2, hog_channel=0):
     
     image_names = glob.glob(path)
-    image_names = image_names[0:1000] # TODO: Remove this limitation
     features = extract_features(image_names, cspace=cspace, spatial_size=spatial_size,
                                 hist_bins=hist_bins, hist_range=hist_range,
                                 orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, hog_channel=hog_channel)
