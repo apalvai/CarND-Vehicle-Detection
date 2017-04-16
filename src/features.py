@@ -136,10 +136,31 @@ def normalize_features(feature_list):
     # return normalized features
     return scaled_X, X, X_scaler
 
+def get_features_and_labels(color_space, spatial_size, hist_bins, hist_range, orient, pix_per_cell, cell_per_block, hog_channel):
+    # extract vehicle and non_vehicle features
+    vehicle_features = extract_vehicle_features(cspace=color_space, spatial_size=spatial_size,
+                                                hist_bins=hist_bins, hist_range=(0, 256),
+                                                orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, hog_channel=hog_channel)
+        
+    non_vehicle_features = extract_non_vehicle_features(cspace=color_space, spatial_size=spatial_size,
+                                                        hist_bins=hist_bins, hist_range=(0, 256),
+                                                        orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, hog_channel=hog_channel)
+    
+    # Normalize features
+    combined_features = [vehicle_features, non_vehicle_features]
+    scaled_X, X, X_scaler = normalize_features((vehicle_features, non_vehicle_features))
+    
+    # Define the labels vector
+    y = np.hstack((np.ones(len(vehicle_features)), np.zeros(len(non_vehicle_features))))
+    
+    return scaled_X, y, X_scaler
+
 def test():
     # extract vehicle and non_vehicle features
     vehicle_features = extract_vehicle_features()
     non_vehicle_features = extract_non_vehicle_features()
+    
+    # scaled_X, y, X_scaler = get_features_and_labels('RGB', (16, 16), 16, (0, 256), 11, 8, 2, 'ALL')
     
     if len(vehicle_features) > 0:
         # Normalize features
