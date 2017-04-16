@@ -73,4 +73,4 @@ def test():
     plt.imshow(window_img)
     plt.show()
 
-test()
+#test()

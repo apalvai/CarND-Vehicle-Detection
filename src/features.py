@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import time
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import glob
@@ -80,10 +81,13 @@ def extract_features_from(path, cspace='HSV', spatial_size=(32, 32),
                           hist_bins=32, hist_range=(0, 256),
                           orient=9, pix_per_cell=8, cell_per_block=2, hog_channel=0):
     
+    t=time.time()
     image_names = glob.glob(path)
     features = extract_features(image_names, cspace=cspace, spatial_size=spatial_size,
                                 hist_bins=hist_bins, hist_range=hist_range,
                                 orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, hog_channel=hog_channel)
+    t2 = time.time()
+    print(round(t2-t, 5), 'Seconds to extract features', len(features))
     return features
 
 def vehicle_images_path():
@@ -124,7 +128,7 @@ def normalize_features(feature_list):
     scaled_X = X_scaler.transform(X)
     print('total features count: ', len(scaled_X))
     # return normalized features
-    return scaled_X, X
+    return scaled_X, X, X_scaler
 
 def test():
     # extract vehicle and non_vehicle features
@@ -134,7 +138,7 @@ def test():
     if len(vehicle_features) > 0:
         # Normalize features
         combined_features = [vehicle_features, non_vehicle_features]
-        scaled_X, X = normalize_features((vehicle_features, non_vehicle_features))
+        scaled_X, X, X_scaler = normalize_features((vehicle_features, non_vehicle_features))
         
         images_path = vehicle_images_path()
         image_names = glob.glob(images_path)
