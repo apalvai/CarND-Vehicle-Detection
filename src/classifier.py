@@ -13,15 +13,7 @@ from sklearn.model_selection import train_test_split
 from features import extract_vehicle_features, extract_non_vehicle_features, normalize_features, extract_features_in_image
 from helpers import slide_window, draw_boxes
 
-def get_features_and_labels():
-    color_space = 'HLS' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
-    orient = 11  # HOG orientations
-    pix_per_cell = 8 # HOG pixels per cell
-    cell_per_block = 2 # HOG cells per block
-    hog_channel = 'ALL' # Can be 0, 1, 2, or "ALL"
-    spatial_size = (16, 16) # Spatial binning dimensions
-    hist_bins = 16    # Number of histogram bins
-    
+def get_features_and_labels(color_space, spatial_size, hist_bins, hist_range, orient, pix_per_cell, cell_per_block, hog_channel):
     # extract vehicle and non_vehicle features
     vehicle_features = extract_vehicle_features(cspace=color_space, spatial_size=spatial_size,
                                                 hist_bins=hist_bins, hist_range=(0, 256),
@@ -105,8 +97,18 @@ def search_windows(img, windows, clf, scaler,
     return on_windows
 
 def test():
+    
+    color_space = 'HLS' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
+    orient = 11  # HOG orientations
+    pix_per_cell = 8 # HOG pixels per cell
+    cell_per_block = 2 # HOG cells per block
+    hog_channel = 'ALL' # Can be 0, 1, 2, or "ALL"
+    spatial_size = (16, 16) # Spatial binning dimensions
+    hist_bins = 16    # Number of histogram bins
+    hist_range = (0, 256)
+    
     # Retrieve features and labels
-    features, y, X_scaler = get_features_and_labels()
+    features, y, X_scaler = get_features_and_labels(color_space, spatial_size, hist_bins, hist_range, orient, pix_per_cell, cell_per_block, hog_channel)
     
     # create and train a classifier
     svc = None
@@ -129,13 +131,18 @@ def test():
     print('y_start_stop: ', y_start_stop)
     
     # windows to be explored in the image
-    windows = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop, xy_window=(64, 64), xy_overlap=(0.5, 0.5))
+    window_sizes = [64, 80, 96, 112, 128, 144, 160]
+    windows = []
+    for window_size in window_sizes:
+        windows_per_size = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop, xy_window=(window_size, window_size), xy_overlap=(0.5, 0.5))
+        windows.extend(windows_per_size)
+    
     print ('windows count: ', len(windows))
     # determine the windows where a vehicle is detected
     print('searching image for vehicles...')
     hot_windows = search_windows(image, windows, svc, X_scaler,
-                                 color_space='HLS', spatial_size=(16, 16), hist_bins=16, hist_range=(0, 256),
-                                 orient=11, pix_per_cell=8, cell_per_block=2, hog_channel='ALL')
+                                 color_space=color_space, spatial_size=spatial_size, hist_bins=hist_bins, hist_range=hist_range,
+                                 orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, hog_channel=hog_channel)
     print ('hot_windows count: ', len(hot_windows))
 
     # draw the boxes for detected hot_windows
