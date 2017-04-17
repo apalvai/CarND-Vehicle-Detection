@@ -1,6 +1,9 @@
 import numpy as np
 import time
 import cv2
+import pickle
+
+import os.path
 
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -29,18 +32,18 @@ def train_linear_SVC_classifer(svc, X_train, X_test, y_train, y_test):
     # Use a linear SVC
     if svc == None:
         # print('creating Linear SVC...')
-        # svc = LinearSVC()
+        svc = LinearSVC()
         
-        print('creating SVC and searching for best params...')
-        parameters = {'kernel':('linear', 'rbf'), 'C':[0.1, 1, 10], 'gamma':[0.1, 1, 10]}
-        svr = svm.SVC()
-        svc = GridSearchCV(svr, parameters)
+        # print('creating SVC and searching for best params...')
+        # parameters = {'kernel':('linear', 'rbf'), 'C':[0.1, 1], 'gamma':[0.1, 1]}
+        # svr = svm.SVC()
+        # svc = GridSearchCV(svr, parameters)
 
     # Check the training time for the SVC
     print('training...')
     t=time.time()
     svc.fit(X_train, y_train)
-    print('best params: ', svc.best_params_)
+    # print('best params: ', svc.best_params_)
     t2 = time.time()
     print(round(t2-t, 2), 'Seconds to train SVC...')
 
@@ -146,7 +149,7 @@ def find_vehicles_using_hog_sub_sampling(img, ystart, ystop, scale, svc, X_scale
 
     return windows
 
-def detect_vehicles_using_sliding_window(image, should_train_classifier=True):
+def detect_vehicles_using_sliding_window(image, should_train_classifier=False):
     # Image feature extraction parameters
     color_space = 'HLS' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
     orient = 11  # HOG orientations
@@ -157,15 +160,22 @@ def detect_vehicles_using_sliding_window(image, should_train_classifier=True):
     hist_bins = 16    # Number of histogram bins
     hist_range = (0, 256)
     
-    if should_train_classifier == True:
+    # load the saved features
+    features, y, X_scaler = load_training_data()
+    if features is None or y is None or X_scaler is None or should_train_classifier == True:
         # Retrieve features and labels
         features, y, X_scaler = get_features_and_labels(color_space, spatial_size, hist_bins, hist_range, orient, pix_per_cell, cell_per_block, hog_channel)
-        
+        # save the features
+        save_training_data([features, y, X_scaler])
+    
+    # load classifier
+    svc = load_classifier()
+    if svc is None or should_train_classifier == True:
         # create and train a classifier
-        svc = None
-        for epoch in range (0, 1):
+        for epoch in range (0, 7):
             X_train, X_test, y_train, y_test = get_train_and_test_data(features, y)
             svc = train_linear_SVC_classifer(svc, X_train, X_test, y_train, y_test)
+            save_classifier(svc)
     
     # Uncomment the following line if you extracted training
     # data from .png images (scaled 0 to 1 by mpimg) and the
@@ -193,7 +203,7 @@ def detect_vehicles_using_sliding_window(image, should_train_classifier=True):
     print ('hot_windows count: ', len(hot_windows))
     return hot_windows
 
-def detect_vehicles_using_hog_sub_sampling(image, should_train_classifier=True):
+def detect_vehicles_using_hog_sub_sampling(image, should_train_classifier=False):
     # Image feature extraction parameters
     color_space = 'HLS'
     spatial_size = (16, 16)
@@ -204,15 +214,22 @@ def detect_vehicles_using_hog_sub_sampling(image, should_train_classifier=True):
     cell_per_block = 2
     hog_channel = 'ALL'
     
-    if should_train_classifier == True:
+    # load the saved features
+    features, y, X_scaler = load_training_data()
+    if features is None or y is None or X_scaler is None or should_train_classifier == True:
         # Retrieve features and labels
         features, y, X_scaler = get_features_and_labels(color_space, spatial_size, hist_bins, hist_range, orient, pix_per_cell, cell_per_block, hog_channel)
+        # save the features
+        save_training_data([features, y, X_scaler])
         
+    # load classifier
+    svc = load_classifier()
+    if svc is None or should_train_classifier == True:
         # create and train a classifier
-        svc = None
         for epoch in range (0, 7):
             X_train, X_test, y_train, y_test = get_train_and_test_data(features, y)
             svc = train_linear_SVC_classifer(svc, X_train, X_test, y_train, y_test)
+            save_classifier(svc)
     
     image_shape = image.shape
     ystart = np.int(image_shape[0]/2)
@@ -224,9 +241,46 @@ def detect_vehicles_using_hog_sub_sampling(image, should_train_classifier=True):
         hot_windows_per_scale = find_vehicles_using_hog_sub_sampling(image, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, color_space, spatial_size, hist_bins)
         print('found ', len(hot_windows_per_scale), ' hot windows for scale ', scale)
         hot_windows.extend(hot_windows_per_scale)
-
+    
     print('found hot windows: ', len(hot_windows))
     return hot_windows
+
+def save_training_data(training_data):
+    # training_data consists of features, labels and scaler(normalization) saved as training_data.pickle
+    print('saving training data...')
+    with open('training_data.pickle', 'wb') as f:
+        pickle.dump(training_data, f)
+    print('saved training data')
+
+def load_training_data():
+    # training_data consists of features, labels and scaler(normalization) saved as training_data.pickle
+    print('loading training data...')
+    if file_exists('training_data.pickle'):
+        with open('training_data.pickle', 'rb') as f:
+            features, y, X_scaler = pickle.load(f)
+        print('loaded training data')
+        return features, y, X_scaler
+    else:
+        return None, None, None
+
+def save_classifier(clf):
+    print('saving classifier...')
+    with open('classifier.pickle', 'wb') as f:
+        pickle.dump(clf, f)
+    print('saved classifier')
+
+def load_classifier():
+    print('loading classifier...')
+    if file_exists('classifier.pickle'):
+        with open('classifier.pickle', 'rb') as f:
+            clf = pickle.load(f)
+        print('loaded classifier')
+        return clf
+    else:
+        return None
+
+def file_exists(file_path):
+    return os.path.exists(file_path)
 
 def test():
     # Examine the performance of classifier with a test image

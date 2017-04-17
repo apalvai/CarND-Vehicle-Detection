@@ -2,6 +2,7 @@ import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
+import glob
 from scipy.ndimage.measurements import label
 
 from classifier import detect_vehicles_using_hog_sub_sampling
@@ -37,7 +38,7 @@ def draw_labeled_bboxes(img, labels):
     # Return the image
     return img
 
-def detect_vehicles_using_heat_maps(image):
+def detect_vehicles_using_heat_maps(image, should_train_classifier=False):
     # create heat map
     heat = np.zeros_like(image[:,:,0]).astype(np.float)
     
@@ -48,7 +49,7 @@ def detect_vehicles_using_heat_maps(image):
     heat = add_heat(heat, box_list)
     
     # Apply threshold to help remove false positives
-    heat = apply_threshold(heat,1)
+    heat = apply_threshold(heat, 10)
     
     # Visualize the heatmap when displaying
     heatmap = np.clip(heat, 0, 255)
@@ -59,24 +60,29 @@ def detect_vehicles_using_heat_maps(image):
     return heatmap, labels
 
 def test():
-    # Read in image similar to one shown above
-    image = mpimg.imread('../test_images/test1.jpg')
+    image_names = glob.glob('../test_images/*.jpg')
     
-    # get the labels using heat maps
-    heatmap, labels = detect_vehicles_using_heat_maps(image )
+    should_train_classifier = True
     
-    # draw the labels on image
-    draw_img = draw_labeled_bboxes(np.copy(image), labels)
-    
-    fig = plt.figure()
-    plt.subplot(121)
-    plt.imshow(draw_img)
-    plt.title('Car Positions')
-    plt.subplot(122)
-    plt.imshow(heatmap, cmap='hot')
-    plt.title('Heat Map')
-    fig.tight_layout()
-    plt.show()
+    for image_name in image_names:
+        # Read in image similar to one shown above
+        image = mpimg.imread(image_name)
+        
+        # get the labels using heat maps
+        heatmap, labels = detect_vehicles_using_heat_maps(image)
+        
+        # draw the labels on image
+        draw_img = draw_labeled_bboxes(np.copy(image), labels)
+        
+        fig = plt.figure()
+        plt.subplot(121)
+        plt.imshow(draw_img)
+        plt.title('Car Positions')
+        plt.subplot(122)
+        plt.imshow(heatmap, cmap='hot')
+        plt.title('Heat Map')
+        fig.tight_layout()
+        plt.show()
 
 test()
 
