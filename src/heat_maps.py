@@ -50,10 +50,6 @@ def detect_vehicles_using_heat_maps(image):
     features, y, X_scaler, svc = get_training_data_and_classifier()
     box_list = detect_vehicles_using_hog_sub_sampling(image, features, y, X_scaler, svc)
     
-    # Try to re-load training data, if it wasn't initally available
-    if features is None or y is None or X_scaler is None:
-        features, y, X_scaler = load_training_data()
-    
     # Try to re-load classifier, if it wasn't initally available
     if svc is None:
         svc = load_classifier()
@@ -107,12 +103,12 @@ def test():
         fig.tight_layout()
         plt.show()
 
-# test()
+test()
 
-from moviepy.editor import VideoFileClip
-
-white_output = '../white.mp4'
-clip1 = VideoFileClip('../project_video.mp4')
-white_clip = clip1.fl_image(image_with_vehicles)
-white_clip.write_videofile(white_output, audio=False)
+#from moviepy.editor import VideoFileClip
+#
+#white_output = '../white.mp4'
+#clip1 = VideoFileClip('../project_video.mp4')
+#white_clip = clip1.fl_image(image_with_vehicles)
+#white_clip.write_videofile(white_output, audio=False)
 

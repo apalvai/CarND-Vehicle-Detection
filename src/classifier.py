@@ -32,7 +32,7 @@ def train_linear_SVC_classifer(svc, X_train, X_test, y_train, y_test):
     # Use a linear SVC
     if svc == None:
         # print('creating Linear SVC...')
-        svc = LinearSVC()
+        svc = LinearSVC(C=0.5)
         
         # print('creating SVC and searching for best params...')
         # parameters = {'kernel':('linear', 'rbf'), 'C':[0.1, 1], 'gamma':[0.1, 1]}
@@ -233,8 +233,8 @@ def detect_vehicles_using_hog_sub_sampling(image, features, y, X_scaler, svc, sh
     
     image_shape = image.shape
     ystart = np.int(image_shape[0]/2)
-    ystop = image_shape[0]
-    scales = [0.5, 1.0, 1.5, 2.0]
+    ystop = np.int(image_shape[0] - 60)
+    scales = [0.5, 1.0, 1.5, 2.0, 2.5]
     
     hot_windows = []
     for scale in scales:
