@@ -149,7 +149,7 @@ def find_vehicles_using_hog_sub_sampling(img, ystart, ystop, scale, svc, X_scale
 
     return windows
 
-def detect_vehicles_using_sliding_window(image, should_train_classifier=False):
+def detect_vehicles_using_sliding_window(image, features, y, X_scaler, svc, should_train_classifier=False):
     # Image feature extraction parameters
     color_space = 'HLS' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
     orient = 11  # HOG orientations
@@ -161,7 +161,7 @@ def detect_vehicles_using_sliding_window(image, should_train_classifier=False):
     hist_range = (0, 256)
     
     # load the saved features
-    features, y, X_scaler = load_training_data()
+    # features, y, X_scaler = load_training_data()
     if features is None or y is None or X_scaler is None or should_train_classifier == True:
         # Retrieve features and labels
         features, y, X_scaler = get_features_and_labels(color_space, spatial_size, hist_bins, hist_range, orient, pix_per_cell, cell_per_block, hog_channel)
@@ -169,7 +169,7 @@ def detect_vehicles_using_sliding_window(image, should_train_classifier=False):
         save_training_data([features, y, X_scaler])
     
     # load classifier
-    svc = load_classifier()
+    # svc = load_classifier()
     if svc is None or should_train_classifier == True:
         # create and train a classifier
         for epoch in range (0, 7):
@@ -203,7 +203,7 @@ def detect_vehicles_using_sliding_window(image, should_train_classifier=False):
     print ('hot_windows count: ', len(hot_windows))
     return hot_windows
 
-def detect_vehicles_using_hog_sub_sampling(image, should_train_classifier=False):
+def detect_vehicles_using_hog_sub_sampling(image, features, y, X_scaler, svc, should_train_classifier=False):
     # Image feature extraction parameters
     color_space = 'HLS'
     spatial_size = (16, 16)
@@ -215,7 +215,7 @@ def detect_vehicles_using_hog_sub_sampling(image, should_train_classifier=False)
     hog_channel = 'ALL'
     
     # load the saved features
-    features, y, X_scaler = load_training_data()
+    # features, y, X_scaler = load_training_data()
     if features is None or y is None or X_scaler is None or should_train_classifier == True:
         # Retrieve features and labels
         features, y, X_scaler = get_features_and_labels(color_space, spatial_size, hist_bins, hist_range, orient, pix_per_cell, cell_per_block, hog_channel)
@@ -223,7 +223,7 @@ def detect_vehicles_using_hog_sub_sampling(image, should_train_classifier=False)
         save_training_data([features, y, X_scaler])
         
     # load classifier
-    svc = load_classifier()
+    # svc = load_classifier()
     if svc is None or should_train_classifier == True:
         # create and train a classifier
         for epoch in range (0, 7):
@@ -286,11 +286,15 @@ def test():
     # Examine the performance of classifier with a test image
     image = mpimg.imread('../test_images/test1.jpg')
     
+    # load training data and classifier
+    features, y, X_scaler = load_training_data()
+    svc = load_classifier()
+    
     # detect vehciles using sliding window
-    # hot_windows = detect_vehicles_using_sliding_window(image)
+    # hot_windows = detect_vehicles_using_sliding_window(image, features, y, X_scaler, svc)
     
     # detect vehicles using sliding window and hog sub-sampling
-    hot_windows = detect_vehicles_using_hog_sub_sampling(image)
+    hot_windows = detect_vehicles_using_hog_sub_sampling(image, features, y, X_scaler, svc)
     
     # draw hot_windows on the image
     test_img = draw_boxes(image, hot_windows, (0, 0, 255), 6)

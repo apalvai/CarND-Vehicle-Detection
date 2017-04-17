@@ -5,7 +5,7 @@ import cv2
 import glob
 from scipy.ndimage.measurements import label
 
-from classifier import detect_vehicles_using_hog_sub_sampling
+from classifier import detect_vehicles_using_hog_sub_sampling, load_training_data, load_classifier
 
 def add_heat(heatmap, bbox_list):
     # Iterate through list of bboxes
@@ -38,12 +38,12 @@ def draw_labeled_bboxes(img, labels):
     # Return the image
     return img
 
-def detect_vehicles_using_heat_maps(image, should_train_classifier=False):
+def detect_vehicles_using_heat_maps(image, features, y, X_scaler, svc, should_train_classifier=False):
     # create heat map
     heat = np.zeros_like(image[:,:,0]).astype(np.float)
     
     # get the vehicles enclosing boxes in the image
-    box_list = detect_vehicles_using_hog_sub_sampling(image)
+    box_list = detect_vehicles_using_hog_sub_sampling(image, features, y, X_scaler, svc)
     
     # Add heat to each box in box list
     heat = add_heat(heat, box_list)
@@ -64,12 +64,24 @@ def test():
     
     should_train_classifier = True
     
+    # load training data and classifier
+    features, y, X_scaler = load_training_data()
+    svc = load_classifier()
+    
     for image_name in image_names:
         # Read in image similar to one shown above
         image = mpimg.imread(image_name)
         
         # get the labels using heat maps
-        heatmap, labels = detect_vehicles_using_heat_maps(image)
+        heatmap, labels = detect_vehicles_using_heat_maps(image, features, y, X_scaler, svc)
+        
+        # Try to re-load training data, if it wasn't initally available
+        if features is None or y is None or X_scaler is None:
+            features, y, X_scaler = load_training_data()
+        
+        # Try to re-load classifier, if it wasn't initally available
+        if svc is None:
+            svc = load_classifier()
         
         # draw the labels on image
         draw_img = draw_labeled_bboxes(np.copy(image), labels)
