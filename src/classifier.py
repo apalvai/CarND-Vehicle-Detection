@@ -234,12 +234,12 @@ def detect_vehicles_using_hog_sub_sampling(image, should_train_classifier=False)
     image_shape = image.shape
     ystart = np.int(image_shape[0]/2)
     ystop = image_shape[0]
-    scales = [1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
+    scales = [0.5, 1.0, 1.5, 2.0]
     
     hot_windows = []
     for scale in scales:
         hot_windows_per_scale = find_vehicles_using_hog_sub_sampling(image, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, color_space, spatial_size, hist_bins)
-        print('found ', len(hot_windows_per_scale), ' hot windows for scale ', scale)
+        # print('found ', len(hot_windows_per_scale), ' hot windows for scale ', scale)
         hot_windows.extend(hot_windows_per_scale)
     
     print('found hot windows: ', len(hot_windows))
