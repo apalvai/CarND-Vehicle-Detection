@@ -146,7 +146,7 @@ def find_vehicles_using_hog_sub_sampling(img, ystart, ystop, scale, svc, X_scale
 
     return windows
 
-def detect_vehicles(image):
+def detect_vehicles_using_sliding_window(image):
     # Image feature extraction parameters
     color_space = 'HLS' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
     orient = 11  # HOG orientations
@@ -192,7 +192,7 @@ def detect_vehicles(image):
     print ('hot_windows count: ', len(hot_windows))
     return hot_windows
 
-def detect_vehicles_image_using_hog_sub_sampling(image):
+def detect_vehicles_using_hog_sub_sampling(image):
     # Image feature extraction parameters
     color_space = 'HLS'
     spatial_size = (16, 16)
@@ -231,10 +231,10 @@ def test():
     image = mpimg.imread('../test_images/test1.jpg')
     
     # detect vehciles using sliding window
-    # hot_windows = detect_vehicles(image)
+    # hot_windows = detect_vehicles_using_sliding_window(image)
     
     # detect vehicles using sliding window and hog sub-sampling
-    hot_windows = detect_vehicles_image_using_hog_sub_sampling(image)
+    hot_windows = detect_vehicles_using_hog_sub_sampling(image)
     
     # draw hot_windows on the image
     test_img = draw_boxes(image, hot_windows, (0, 0, 255), 6)
