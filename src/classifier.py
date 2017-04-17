@@ -146,7 +146,7 @@ def find_vehicles_using_hog_sub_sampling(img, ystart, ystop, scale, svc, X_scale
 
     return windows
 
-def detect_vehicles_using_sliding_window(image):
+def detect_vehicles_using_sliding_window(image, should_train_classifier=True):
     # Image feature extraction parameters
     color_space = 'HLS' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
     orient = 11  # HOG orientations
@@ -157,20 +157,21 @@ def detect_vehicles_using_sliding_window(image):
     hist_bins = 16    # Number of histogram bins
     hist_range = (0, 256)
     
-    # Retrieve features and labels
-    features, y, X_scaler = get_features_and_labels(color_space, spatial_size, hist_bins, hist_range, orient, pix_per_cell, cell_per_block, hog_channel)
-    
-    # create and train a classifier
-    svc = None
-    for epoch in range (0, 1):
-        X_train, X_test, y_train, y_test = get_train_and_test_data(features, y)
-        svc = train_linear_SVC_classifer(svc, X_train, X_test, y_train, y_test)
+    if should_train_classifier == True:
+        # Retrieve features and labels
+        features, y, X_scaler = get_features_and_labels(color_space, spatial_size, hist_bins, hist_range, orient, pix_per_cell, cell_per_block, hog_channel)
+        
+        # create and train a classifier
+        svc = None
+        for epoch in range (0, 1):
+            X_train, X_test, y_train, y_test = get_train_and_test_data(features, y)
+            svc = train_linear_SVC_classifer(svc, X_train, X_test, y_train, y_test)
     
     # Uncomment the following line if you extracted training
     # data from .png images (scaled 0 to 1 by mpimg) and the
     # image you are searching is a .jpg (scaled 0 to 255)
     image = image.astype(np.float32)/255
-
+    
     # Size of the test image is (1280, 720)
     image_shape = image.shape
     y_start_stop = [320, image_shape[0]]
@@ -192,7 +193,7 @@ def detect_vehicles_using_sliding_window(image):
     print ('hot_windows count: ', len(hot_windows))
     return hot_windows
 
-def detect_vehicles_using_hog_sub_sampling(image):
+def detect_vehicles_using_hog_sub_sampling(image, should_train_classifier=True):
     # Image feature extraction parameters
     color_space = 'HLS'
     spatial_size = (16, 16)
@@ -203,14 +204,15 @@ def detect_vehicles_using_hog_sub_sampling(image):
     cell_per_block = 2
     hog_channel = 'ALL'
     
-    # Retrieve features and labels
-    features, y, X_scaler = get_features_and_labels(color_space, spatial_size, hist_bins, hist_range, orient, pix_per_cell, cell_per_block, hog_channel)
-    
-    # create and train a classifier
-    svc = None
-    for epoch in range (0, 7):
-        X_train, X_test, y_train, y_test = get_train_and_test_data(features, y)
-        svc = train_linear_SVC_classifer(svc, X_train, X_test, y_train, y_test)
+    if should_train_classifier == True:
+        # Retrieve features and labels
+        features, y, X_scaler = get_features_and_labels(color_space, spatial_size, hist_bins, hist_range, orient, pix_per_cell, cell_per_block, hog_channel)
+        
+        # create and train a classifier
+        svc = None
+        for epoch in range (0, 7):
+            X_train, X_test, y_train, y_test = get_train_and_test_data(features, y)
+            svc = train_linear_SVC_classifer(svc, X_train, X_test, y_train, y_test)
     
     image_shape = image.shape
     ystart = np.int(image_shape[0]/2)
