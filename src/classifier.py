@@ -146,8 +146,8 @@ def find_vehicles_using_hog_sub_sampling(img, ystart, ystop, scale, svc, X_scale
 
     return windows
 
-def detect_vehicles():
-    
+def detect_vehicles(image):
+    # Image feature extraction parameters
     color_space = 'HLS' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
     orient = 11  # HOG orientations
     pix_per_cell = 8 # HOG pixels per cell
@@ -165,10 +165,6 @@ def detect_vehicles():
     for epoch in range (0, 1):
         X_train, X_test, y_train, y_test = get_train_and_test_data(features, y)
         svc = train_linear_SVC_classifer(svc, X_train, X_test, y_train, y_test)
-    
-    print('svc', svc)
-    # Examine the performance of classifier with a test image
-    image = mpimg.imread('../test_images/test1.jpg')
     
     # Uncomment the following line if you extracted training
     # data from .png images (scaled 0 to 1 by mpimg) and the
@@ -194,16 +190,10 @@ def detect_vehicles():
                                  color_space=color_space, spatial_size=spatial_size, hist_bins=hist_bins, hist_range=hist_range,
                                  orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, hog_channel=hog_channel)
     print ('hot_windows count: ', len(hot_windows))
+    return hot_windows
 
-    # draw the boxes for detected hot_windows
-    draw_image = np.copy(image)
-    window_img = draw_boxes(draw_image, hot_windows, color=(0, 0, 255), thick=6)
-
-    plt.imshow(window_img)
-    plt.show()
-
-def detect_vehicles_image_using_hog_sub_sampling():
-    
+def detect_vehicles_image_using_hog_sub_sampling(image):
+    # Image feature extraction parameters
     color_space = 'HLS'
     spatial_size = (16, 16)
     hist_bins = 16
@@ -222,13 +212,10 @@ def detect_vehicles_image_using_hog_sub_sampling():
         X_train, X_test, y_train, y_test = get_train_and_test_data(features, y)
         svc = train_linear_SVC_classifer(svc, X_train, X_test, y_train, y_test)
     
-    # Examine the performance of classifier with a test image
-    image = mpimg.imread('../test_images/test1.jpg')
-    
     image_shape = image.shape
     ystart = np.int(image_shape[0]/2)
     ystop = image_shape[0]
-    scales = [1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
+    scales = [1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
     
     hot_windows = []
     for scale in scales:
@@ -237,10 +224,23 @@ def detect_vehicles_image_using_hog_sub_sampling():
         hot_windows.extend(hot_windows_per_scale)
 
     print('found hot windows: ', len(hot_windows))
+    return hot_windows
+
+def test():
+    # Examine the performance of classifier with a test image
+    image = mpimg.imread('../test_images/test1.jpg')
+    
+    # detect vehciles using sliding window
+    # hot_windows = detect_vehicles(image)
+    
+    # detect vehicles using sliding window and hog sub-sampling
+    hot_windows = detect_vehicles_image_using_hog_sub_sampling(image)
+    
+    # draw hot_windows on the image
     test_img = draw_boxes(image, hot_windows, (0, 0, 255), 6)
     
+    # plot the image with windows
     plt.imshow(test_img)
     plt.show()
 
-detect_vehicles_image_using_hog_sub_sampling()
-
+test()
