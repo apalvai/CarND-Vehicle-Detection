@@ -242,7 +242,7 @@ def detect_vehicles_using_hog_sub_sampling(image, features, y, X_scaler, svc, sh
         # print('found ', len(hot_windows_per_scale), ' hot windows for scale ', scale)
         hot_windows.extend(hot_windows_per_scale)
     
-    print('found hot windows: ', len(hot_windows))
+    # print('found hot windows: ', len(hot_windows))
     return hot_windows
 
 def save_training_data(training_data):
