@@ -136,6 +136,10 @@ def find_vehicles_using_hog_sub_sampling(img, ystart, ystop, scale, svc, X_scale
             spatial_features = bin_spatial(subimg, color_space=color_space, size=spatial_size)
             channel1_hist, channel2_hist, channel3_hist, bin_centers, hist_features = color_hist(subimg, nbins=hist_bins, bins_range=(0, 256))
             
+            if contains_invalid_data(spatial_features) or contains_invalid_data(hist_features) or contains_invalid_data(hog_features):
+                print('found invalid data. skipping this window.')
+                continue
+            
             # Scale features and make a prediction
             test_features = X_scaler.transform(np.hstack((spatial_features, hist_features, hog_features)).reshape(1, -1))
             #test_features = X_scaler.transform(np.hstack((shape_feat, hist_feat)).reshape(1, -1))
@@ -148,6 +152,9 @@ def find_vehicles_using_hog_sub_sampling(img, ystart, ystop, scale, svc, X_scale
                 windows.append(((xbox_left, ytop_draw+ystart), (xbox_left+win_draw, ytop_draw+win_draw+ystart)))
 
     return windows
+
+def contains_invalid_data(data):
+    return (np.any(np.isnan(data))) or (np.all(np.isfinite(data)) == False)
 
 def detect_vehicles_using_sliding_window(image, features, y, X_scaler, svc, should_train_classifier=False):
     # Image feature extraction parameters
