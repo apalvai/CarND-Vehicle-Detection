@@ -11,6 +11,10 @@ from classifier import detect_vehicles_using_hog_sub_sampling, load_training_dat
 features, y, X_scaler = load_training_data()
 svc = load_classifier()
 
+# create an array to maintain an array for heats
+heats = None
+heats_limit = 5
+
 def add_heat(heatmap, bbox_list):
     # Iterate through list of bboxes
     for box in bbox_list:
@@ -20,6 +24,16 @@ def add_heat(heatmap, bbox_list):
     
     # Return updated heatmap
     return heatmap# Iterate through list of bboxes
+
+def update_heats(heat):
+    global heats
+    if heats is None:
+        heats = []
+    
+    heats.append(heat)
+    if len(heats) > heats_limit:
+        heats = heats[-heats_limit:]
+        # print('heats: ', len(heats))
 
 def apply_threshold(heatmap, threshold):
     # Zero out pixels below the threshold
@@ -53,6 +67,12 @@ def detect_vehicles_using_heat_maps(image):
     # Add heat to each box in box list
     heat = add_heat(heat, box_list)
     
+    # Append heat to the heats list
+    update_heats(heat)
+    
+    # Compute the mean heat from previous N heat maps
+    heat = np.mean(np.array(heats), axis = 0)
+    
     # Apply threshold to help remove false positives
     heat = apply_threshold(heat, 2)
     
@@ -70,11 +90,11 @@ def get_training_data_and_classifier():
 def image_with_vehicles(image):
     # get the labels using heat maps
     heatmap, labels = detect_vehicles_using_heat_maps(image)
-        
+    
     # draw the labels on image
     draw_img = draw_labeled_bboxes(np.copy(image), labels)
-
-    return draw_img
+    
+    return draw_img, heatmap
 
 def test():
     image_names = glob.glob('../test_images/*.jpg')
@@ -83,11 +103,8 @@ def test():
         # Read in image similar to one shown above
         image = mpimg.imread(image_name)
         
-        # get the labels using heat maps
-        heatmap, labels = detect_vehicles_using_heat_maps(image)
-        
         # draw the labels on image
-        draw_img = draw_labeled_bboxes(np.copy(image), labels)
+        draw_img, heatmap = image_with_vehicles(image)
         
         fig = plt.figure()
         plt.subplot(121)
