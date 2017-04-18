@@ -49,20 +49,25 @@ def draw_labeled_bboxes(img, labels):
         # Identify x and y values of those pixels
         nonzeroy = np.array(nonzero[0])
         nonzerox = np.array(nonzero[1])
-        # Define a bounding box based on min/max x and y
-        bbox = ((np.min(nonzerox), np.min(nonzeroy)), (np.max(nonzerox), np.max(nonzeroy)))
-        # Draw the box on the image
-        cv2.rectangle(img, bbox[0], bbox[1], (0,0,255), 6)
+        if nonzerox.size == 0 or nonzeroy.size == 0:
+            continue
+        try:
+            # Define a bounding box based on min/max x and y
+            bbox = ((np.min(nonzerox), np.min(nonzeroy)), (np.max(nonzerox), np.max(nonzeroy)))
+            # Draw the box on the image
+            cv2.rectangle(img, bbox[0], bbox[1], (0,0,255), 6)
+        except:
+            pass
     # Return the image
     return img
 
 def detect_vehicles_using_heat_maps(image):
-    # create heat map
-    heat = np.zeros_like(image[:,:,0]).astype(np.float)
-    
     # get the vehicles enclosing boxes in the image
     features, y, X_scaler, svc = get_training_data_and_classifier()
     box_list = detect_vehicles_using_hog_sub_sampling(image, features, y, X_scaler, svc)
+    
+    # create heat map
+    heat = np.zeros_like(image[:,:,0]).astype(np.float)
     
     # Add heat to each box in box list
     heat = add_heat(heat, box_list)
@@ -79,9 +84,16 @@ def detect_vehicles_using_heat_maps(image):
     # Visualize the heatmap when displaying
     heatmap = np.clip(heat, 0, 255)
     
+    # Perform the operation
+    heatmap = heatmap.astype(np.int8)
+    output = cv2.connectedComponentsWithStats(heatmap)
+    labels = (np.array(output[1]), output[0])
+    # print('labels: ', labels)
+    
     # Find final boxes from heatmap using label function
-    labels = label(heatmap)
-
+    # labels = label(heatmap)
+    # print('labels: ', labels)
+    
     return heatmap, labels
 
 def get_training_data_and_classifier():
@@ -94,7 +106,8 @@ def image_with_vehicles(image):
     # draw the labels on image
     draw_img = draw_labeled_bboxes(np.copy(image), labels)
     
-    return draw_img, heatmap
+    return draw_img
+    # return draw_img, heatmap
 
 def test():
     image_names = glob.glob('../test_images/*.jpg')
