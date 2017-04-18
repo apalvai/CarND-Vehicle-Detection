@@ -54,7 +54,7 @@ def detect_vehicles_using_heat_maps(image):
     heat = add_heat(heat, box_list)
     
     # Apply threshold to help remove false positives
-    heat = apply_threshold(heat, 7)
+    heat = apply_threshold(heat, 2)
     
     # Visualize the heatmap when displaying
     heatmap = np.clip(heat, 0, 255)

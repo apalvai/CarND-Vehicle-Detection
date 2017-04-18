@@ -10,6 +10,7 @@ import matplotlib.image as mpimg
 
 from sklearn import svm
 from sklearn.svm import LinearSVC
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
 
@@ -26,13 +27,16 @@ def get_train_and_test_data(features, y):
     
     return X_train, X_test, y_train, y_test
 
-def train_linear_SVC_classifer(svc, X_train, X_test, y_train, y_test):
+def train_linear_SVC_classifer(clf, X_train, X_test, y_train, y_test):
     print('X_train: ', X_train.shape)
     print('X_test: ', X_test.shape)
     # Use a linear SVC
-    if svc == None:
+    if clf == None:
         # print('creating Linear SVC...')
         svc = LinearSVC(C=0.5)
+        svc.fit(X_train, y_train)
+        
+        clf = CalibratedClassifierCV(svc, cv=2, method='isotonic')
         
         # print('creating SVC and searching for best params...')
         # parameters = {'kernel':('linear', 'rbf'), 'C':[0.1, 1], 'gamma':[0.1, 1]}
@@ -42,22 +46,22 @@ def train_linear_SVC_classifer(svc, X_train, X_test, y_train, y_test):
     # Check the training time for the SVC
     print('training...')
     t=time.time()
-    svc.fit(X_train, y_train)
+    clf.fit(X_train, y_train)
     # print('best params: ', svc.best_params_)
     t2 = time.time()
     print(round(t2-t, 2), 'Seconds to train SVC...')
 
     # Check the score of the SVC
-    print('Test Accuracy of SVC = ', round(svc.score(X_test, y_test), 4))
+    print('Test Accuracy of SVC = ', round(clf.score(X_test, y_test), 4))
     # Check the prediction time for a single sample
     t=time.time()
     n_predict = 10
-    print('My SVC predicts: ', svc.predict(X_test[0:n_predict]))
+    print('My SVC predicts: ', clf.predict(X_test[0:n_predict]))
     print('For these',n_predict, 'labels: ', y_test[0:n_predict])
     t2 = time.time()
     print(round(t2-t, 5), 'Seconds to predict', n_predict,'labels with SVC')
 
-    return svc
+    return clf
 
 def search_windows(img, windows, clf, scaler,
                    color_space='RGB', spatial_size=(32, 32), hist_bins=32, hist_range=(0, 256),
@@ -143,9 +147,10 @@ def find_vehicles_using_hog_sub_sampling(img, ystart, ystop, scale, svc, X_scale
             # Scale features and make a prediction
             test_features = X_scaler.transform(np.hstack((spatial_features, hist_features, hog_features)).reshape(1, -1))
             #test_features = X_scaler.transform(np.hstack((shape_feat, hist_feat)).reshape(1, -1))
-            test_prediction = svc.predict(test_features)
+            test_prediction_prob = svc.predict_proba(test_features)
+            car_prediction_prob = test_prediction_prob[0][1]
             
-            if test_prediction == 1:
+            if car_prediction_prob >= 0.95:
                 xbox_left = np.int(xleft*scale)
                 ytop_draw = np.int(ytop*scale)
                 win_draw = np.int(window*scale)
@@ -241,7 +246,7 @@ def detect_vehicles_using_hog_sub_sampling(image, features, y, X_scaler, svc, sh
     image_shape = image.shape
     ystart = np.int(image_shape[0]/2)
     ystop = np.int(image_shape[0] - 60)
-    scales = [0.5, 1.0, 1.5, 2.0, 2.5]
+    scales = [0.75, 1.5, 2.25, 3.0, 3.75]
     
     hot_windows = []
     for scale in scales:
