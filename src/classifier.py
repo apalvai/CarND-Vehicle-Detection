@@ -106,7 +106,7 @@ def find_vehicles_using_hog_sub_sampling(img, ystart, ystop, scale, svc, X_scale
     nfeat_per_block = orient*cell_per_block**2
     # 64 was the orginal sampling rate, with 8 cells and 8 pix per cell
     window = 64
-    nblocks_per_window = (window // pix_per_cell)-1
+    nblocks_per_window = (window // pix_per_cell) - cell_per_block + 1
     cells_per_step = 2  # Instead of overlap, define how many cells to step
     nxsteps = (nxblocks - nblocks_per_window) // cells_per_step
     nysteps = (nyblocks - nblocks_per_window) // cells_per_step
@@ -159,7 +159,7 @@ def contains_invalid_data(data):
 def detect_vehicles_using_sliding_window(image, features, y, X_scaler, svc, should_train_classifier=False):
     # Image feature extraction parameters
     color_space = 'HLS' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
-    orient = 11  # HOG orientations
+    orient = 9  # HOG orientations
     pix_per_cell = 8 # HOG pixels per cell
     cell_per_block = 2 # HOG cells per block
     hog_channel = 'ALL' # Can be 0, 1, 2, or "ALL"
@@ -216,7 +216,7 @@ def detect_vehicles_using_hog_sub_sampling(image, features, y, X_scaler, svc, sh
     spatial_size = (16, 16)
     hist_bins = 16
     hist_range = (0, 256)
-    orient = 11
+    orient = 9
     pix_per_cell = 8
     cell_per_block = 2
     hog_channel = 'ALL'
