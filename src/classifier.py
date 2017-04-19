@@ -2,6 +2,7 @@ import numpy as np
 import time
 import cv2
 import pickle
+import glob
 
 import os.path
 
@@ -217,7 +218,7 @@ def detect_vehicles_using_sliding_window(image, features, y, X_scaler, svc, shou
 
 def detect_vehicles_using_hog_sub_sampling(image, features, y, X_scaler, svc, should_train_classifier=False):
     # Image feature extraction parameters
-    color_space = 'HLS'
+    color_space = 'YUV'
     spatial_size = (16, 16)
     hist_bins = 16
     hist_range = (0, 256)
@@ -246,7 +247,7 @@ def detect_vehicles_using_hog_sub_sampling(image, features, y, X_scaler, svc, sh
     image_shape = image.shape
     ystart = np.int(image_shape[0]/2)
     ystop = np.int(image_shape[0] - 60)
-    scales = [0.75, 1.5, 2.25, 3.0, 3.75]
+    scales = [1.0, 1.5, 2.0]
     
     hot_windows = []
     for scale in scales:
@@ -295,24 +296,26 @@ def file_exists(file_path):
     return os.path.exists(file_path)
 
 def test():
-    # Examine the performance of classifier with a test image
-    image = mpimg.imread('../test_images/test1.jpg')
-    
     # load training data and classifier
     features, y, X_scaler = load_training_data()
     svc = load_classifier()
     
-    # detect vehciles using sliding window
-    # hot_windows = detect_vehicles_using_sliding_window(image, features, y, X_scaler, svc)
-    
-    # detect vehicles using sliding window and hog sub-sampling
-    hot_windows = detect_vehicles_using_hog_sub_sampling(image, features, y, X_scaler, svc)
-    
-    # draw hot_windows on the image
-    test_img = draw_boxes(image, hot_windows, (0, 0, 255), 6)
-    
-    # plot the image with windows
-    plt.imshow(test_img)
-    plt.show()
+    image_names = glob.glob('../test_images/*.jpg')
+    for image_name in image_names:
+        # Examine the performance of classifier with a test image
+        image = mpimg.imread(image_name)
+        
+        # detect vehciles using sliding window
+        # hot_windows = detect_vehicles_using_sliding_window(image, features, y, X_scaler, svc)
+        
+        # detect vehicles using sliding window and hog sub-sampling
+        hot_windows = detect_vehicles_using_hog_sub_sampling(image, features, y, X_scaler, svc)
+        
+        # draw hot_windows on the image
+        test_img = draw_boxes(image, hot_windows, (0, 0, 255), 6)
+        
+        # plot the image with windows
+        plt.imshow(test_img)
+        plt.show()
 
 #test()

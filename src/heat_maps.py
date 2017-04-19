@@ -11,9 +11,13 @@ from classifier import detect_vehicles_using_hog_sub_sampling, load_training_dat
 features, y, X_scaler = load_training_data()
 svc = load_classifier()
 
+# heat_windows
+boxes = None
+boxes_limit = 10
+
 # create an array to maintain an array for heats
 heats = None
-heats_limit = 5
+heats_limit = 10
 
 def add_heat(heatmap, bbox_list):
     # Iterate through list of bboxes
@@ -34,6 +38,16 @@ def update_heats(heat):
     if len(heats) > heats_limit:
         heats = heats[-heats_limit:]
         # print('heats: ', len(heats))
+
+def update_boxes(new_boxes):
+    global boxes
+    if boxes is None:
+        boxes = []
+    
+    boxes.extend(new_boxes)
+    if len(boxes) > boxes_limit:
+        boxes = boxes[-boxes_limit:]
+    # print('boxes: ', len(boxes))
 
 def apply_threshold(heatmap, threshold):
     # Zero out pixels below the threshold
@@ -66,11 +80,14 @@ def detect_vehicles_using_heat_maps(image):
     features, y, X_scaler, svc = get_training_data_and_classifier()
     box_list = detect_vehicles_using_hog_sub_sampling(image, features, y, X_scaler, svc)
     
+    # update boxes with box_list
+    update_boxes(box_list)
+    
     # create heat map
     heat = np.zeros_like(image[:,:,0]).astype(np.float)
     
     # Add heat to each box in box list
-    heat = add_heat(heat, box_list)
+    heat = add_heat(heat, boxes)
     
     # Append heat to the heats list
     update_heats(heat)
@@ -79,7 +96,7 @@ def detect_vehicles_using_heat_maps(image):
     heat = np.mean(np.array(heats), axis = 0)
     
     # Apply threshold to help remove false positives
-    heat = apply_threshold(heat, 2)
+    heat = apply_threshold(heat, 1)
     
     # Visualize the heatmap when displaying
     heatmap = np.clip(heat, 0, 255)
